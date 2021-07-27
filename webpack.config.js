@@ -4,6 +4,8 @@ const htmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = {
   entry: {
     index : './src/scripts/index.js',
+    prompt : './src/scripts/prompt.js',
+    displaylist : './src/scripts/displaylist.js',
   },
   mode: 'development',
   output: {

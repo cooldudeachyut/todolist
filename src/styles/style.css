@@ -1,3 +1,120 @@
+@font-face {
+	font-family: "fira-sans";
+	src: url('../assets/FiraSans-Light.ttf') format('truetype'), 
+	url('../assets/FiraSans-Medium.ttf') format('truetype');
+}
+
 #main {
-	font-size:200px;
+	font-size:25px;
+	font-family: 'fira-sans', 'sans-serif';
+	margin:0;
+}
+
+#topbar {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	position: absolute;
+	top: 0;
+	width: 100%;
+	height: 80px;
+	background-color: rgba(0, 0, 0, 0.856);
+}
+
+#topbar h1 {
+	color: rgb(255, 255, 255);
+	font-size: 1.7rem;
+}
+
+.add-button {
+	height: 50px;
+	width: 120px;
+	background-color: rgb(59, 192, 32);
+	font-size: 20px;
+	font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+	margin:15px;
+}
+
+.add-task {
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+
+#content {
+	display: flex;
+	min-height: calc(100vh - 80px);
+	width: 100%;
+	margin: 0;
+	position: absolute;
+	top: 80px;
+}
+
+#sidebar {
+	position:absolute;
+	left:0;
+	display: flex;
+	flex-direction: column;
+	height:100%;
+	width:160px;
+	border-right:rgb(0, 0, 0) solid 2px;
+}
+
+#list-options {
+	display: flex;
+	flex-direction: column;
+}
+
+.display-option {
+	font-size: 1.2rem;
+	padding: 15px 0;
+	border: none;
+	background-color: rgb(255, 255, 255);
+	border-bottom: rgba(0, 0, 0, 0.856) solid 1px;
+}
+
+.display-option:hover {
+	margin-bottom: 5px;
+	animation-name: option-hover;
+	animation-duration: 100ms;
+	animation-fill-mode: forwards;
+}
+
+@keyframes option-hover {
+	0% {
+		box-shadow: none;
+	}
+	
+	100% {
+		box-shadow: -5px 5px 5px rgba(0, 0, 0, 0.637);
+	}
+}
+
+#project-options {
+	margin-top: 20px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	color:rgb(11, 0, 114);
+	font-size: 0.7rem;
+}
+
+#project-options h1 {
+	text-decoration: underline;
+}
+
+.selected {
+	border-top: solid 2px;
+	border-bottom: solid 3px;
+}
+
+#list {
+	position: relative;
+	left:160px;
+	height: calc(100vh - 80px);
+	width: calc(100vw - 160px);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	font-size: 1.3rem;
 }
