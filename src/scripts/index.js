@@ -1,6 +1,6 @@
 import '../styles/style.css';
 import { format, formatDistance, formatRelative, subDays } from 'date-fns';
-import * as prompts from './prompt.js';
+import * as prompt from './prompt.js';
 import * as displayList from './displaylist.js';
 
 const main = document.getElementById("main");
@@ -107,7 +107,17 @@ function createListItemObject(title, description, dueDate)
 	return obj;
 }
 
-function displayPrompt()
+function displayTaskPrompt()
 {
-	main.append(createPrompt());
+	prompt.deletePromptWindow();
+	main.append(prompt.createTaskPrompt());
 }
+
+function displayProjectPrompt()
+{
+	prompt.deletePromptWindow();
+	main.append(prompt.createProjectPrompt());
+}
+
+document.getElementById('add-task-button').addEventListener('click', displayTaskPrompt);
+document.getElementById('add-project-button').addEventListener('click', displayProjectPrompt);

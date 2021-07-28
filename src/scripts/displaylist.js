@@ -1,19 +1,21 @@
-export function createTodayList(listobject)
+import '../styles/style.css';
+
+export function displayTodayList(listobject)
 {
 
 }
 
-export function createThisWeekList(listobject)
+export function displayThisWeekList(listobject)
 {
 	
 }
 
-export function createProjectList(listobject)
+export function displayProjectList(listobject)
 {
 
 }
 
-export function createTotalList(listobject)
+export function displayTotalList(listobject)
 {
 
 }
