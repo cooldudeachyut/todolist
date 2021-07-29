@@ -1,5 +1,4 @@
 import '../styles/style.css';
-import { createListItemObject } from './index.js';
 
 function basicElementFactory(...elementDetails) //Element tag name, Element id (send value as undefined for no id), Element class 1, class 2 ....
 {

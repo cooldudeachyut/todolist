@@ -1,5 +1,5 @@
 import '../styles/style.css';
-import { format, formatDistance, formatRelative, subDays } from 'date-fns';
+import { differenceInDays } from 'date-fns';
 import * as prompt from './prompt.js';
 import * as displayList from './displaylist.js';
 
@@ -14,7 +14,7 @@ class task
 	#id;
 	#status;
 
-	constructor(title, description, dueDate, id, priority) {
+	constructor(title, description, dueDate, id, priority, status) {
 		this.#title = title;
 		this.#description = description;
 		this.#dueDate = dueDate;
@@ -81,16 +81,22 @@ class project
 	}
 
 	addTaskByPriority(taskObject) {
-		for (let i = 0; i < this.#taskList.length; i++)
+		let i = 0;
+	
+		for (i = 0; i < this.#taskList.length; i++)
 		{
-			if (this.#taskList[i].getPriority() >= taskObject.getPriority())
-			{
-				this.#taskList.splice(i, 0, taskObject);
-				this.#taskList.setID(`${this.#title}-${this.#taskID}`);
-				this.#taskID++;
+			if (this.#taskList[i].getPriority() > taskObject.getPriority())
 				break;
-			}
 		}
+
+		if (i == this.#taskList.length)
+			this.#taskList.push(taskObject);
+
+		else
+			this.#taskList.splice(i, 0, taskObject);
+
+		this.#taskList[i].setID(`${this.#title}-${this.#taskID}`);
+		this.#taskID++;
 	}
 
 	moveTaskUp(taskID) {
@@ -104,6 +110,10 @@ class project
 				let temp = this.#taskList[i];
 				this.#taskList[i] = this.#taskList[i-1];
 				this.#taskList[i-1] = temp;
+
+				let tempPriority = this.#taskList[i].getPriority();
+				this.#taskList[i].setPriority(this.#taskList[i-1].getPriority());
+				this.#taskList[i-1].setPriority(tempPriority);
 			}
 		}
 	}
@@ -119,6 +129,10 @@ class project
 				let temp = this.#taskList[i];
 				this.#taskList[i] = this.#taskList[i+1];
 				this.#taskList[i+1] = temp;
+
+				let tempPriority = this.#taskList[i].getPriority();
+				this.#taskList[i].setPriority(this.#taskList[i+1].getPriority());
+				this.#taskList[i+1].setPriority(tempPriority);
 			}
 		}
 	}
@@ -196,12 +210,18 @@ projList.addProject(univProject);
 
 function calculatePriority(dueDate)
 {
-	return 1;
+	let last = new Date(dueDate.substr(0,4), dueDate.substr(5,2) - 1, dueDate.substr(8,2));
+	let today = new Date();
+	alert(last);
+
+	return differenceInDays(today, last);
 }
 
 function addTaskObject(title, description, dueDate)
 {
 	let priority = calculatePriority(dueDate);
+	alert(priority);
+
 	const newTask = new task(title, description, dueDate, -1, priority);
 	let currentProjectName = projList.getCurrentProject().getTitle();
 
