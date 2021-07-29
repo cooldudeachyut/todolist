@@ -1,4 +1,5 @@
 import '../styles/style.css';
+import { createListItemObject } from './index.js';
 
 function basicElementFactory(...elementDetails) //Element tag name, Element id (send value as undefined for no id), Element class 1, class 2 ....
 {
@@ -46,22 +47,23 @@ function addLabelAndInput(formElement, id, name, type, labelText, containerClass
 	formElement.append(div);
 }
 
-function createTextArea(id, textAreaClass)
+function createTextArea(id, name, textAreaClass)
 {
 	let textArea = basicElementFactory('textarea', id, textAreaClass);
 
 	textArea.setAttribute('wrap', 'hard');
 	textArea.setAttribute('maxlength', '150');
+	textArea.setAttribute('name', name);
 
 	return textArea;
 }
 
-function addLabelAndTextArea(formElement, id, labelText, containerClass, labelClass, textAreaClass)
+function addLabelAndTextArea(formElement, id, name, labelText, containerClass, labelClass, textAreaClass)
 {
 	let div = basicElementFactory('div', undefined, containerClass);
 	
 	div.append(createLabel(id, labelText, labelClass));
-	div.append(createTextArea(id, textAreaClass));
+	div.append(createTextArea(id, name, textAreaClass));
 
 	formElement.append(div);
 }
@@ -73,6 +75,7 @@ function createBasicPromptWindow()
 	let taskPromptForm = basicElementFactory('form', 'input-form', 'form-box');
 
 	blackScreen.addEventListener('mousedown', deletePromptWindow);
+	taskPromptForm.addEventListener('submit', handleForm);
 
 	containerDiv.append(blackScreen);
 	containerDiv.append(taskPromptForm);
@@ -92,28 +95,35 @@ function createSubmitButton()
 
 export function createTaskPrompt()
 {
+	deletePromptWindow();
 	let promptWindow = createBasicPromptWindow();
 
 	addLabelAndInput(promptWindow[1], 'task-name', 'task', 'text', 'Enter task name', 'input-container', 'label-text', 'input-box');
-	addLabelAndTextArea(promptWindow[1], 'task-description', 'Enter task description', 'input-container', 'label-text', 'input-box description-box');
+	addLabelAndTextArea(promptWindow[1], 'task-description', 'description', 'Enter task description', 'input-container', 'label-text', 'input-box description-box');
 	addLabelAndInput(promptWindow[1], 'due-date', 'date', 'date', 'Enter due date', 'input-container', 'label-text', 'input-box');
 	promptWindow[1].append(createSubmitButton());
 
-	return promptWindow[0];
+	return promptWindow;
 }
 
 export function createProjectPrompt()
 {
+	deletePromptWindow();
 	let promptWindow = createBasicPromptWindow();
 
 	addLabelAndInput(promptWindow[1], 'project-name', 'project', 'text', 'Enter project name', 'input-container', 'label-text', 'input-box');
-	addLabelAndTextArea(promptWindow[1], 'project-description', 'Enter project description', 'input-container', 'label-text', 'input-box description-box');
 	promptWindow[1].append(createSubmitButton());
 
-	return promptWindow[0];
+	return promptWindow;
 }
 
-export function deletePromptWindow()
+function handleForm(event)
+{
+	event.preventDefault();
+	deletePromptWindow();
+}
+
+function deletePromptWindow()
 {
 	let window = document.getElementById('prompt-container');
 

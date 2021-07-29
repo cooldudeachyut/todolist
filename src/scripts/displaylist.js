@@ -2,7 +2,7 @@ import '../styles/style.css';
 
 export function displayTodayList(listobject)
 {
-
+	
 }
 
 export function displayThisWeekList(listobject)
