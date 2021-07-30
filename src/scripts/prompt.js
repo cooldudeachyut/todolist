@@ -1,6 +1,6 @@
 import '../styles/style.css';
 
-function basicElementFactory(...elementDetails) //Element tag name, Element id (send value as undefined for no id), Element class 1, class 2 ....
+export function basicElementFactory(...elementDetails) //Element tag name, Element id (send value as undefined for no id), Element class 1, class 2 ....
 {
 	let div = document.createElement(elementDetails[0]);
 
@@ -32,6 +32,9 @@ function createInputBox(id, name, type, inputBoxClass)
 	inputBox.setAttribute('name', `${name}`);
 	inputBox.setAttribute('autocomplete', 'off');
 	inputBox.setAttribute('required', '');
+
+	if (type == "text")
+		inputBox.setAttribute("maxlength", "25");
 
 	return inputBox;
 }

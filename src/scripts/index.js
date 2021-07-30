@@ -1,9 +1,13 @@
 import '../styles/style.css';
 import { differenceInDays } from 'date-fns';
 import * as prompt from './prompt.js';
-import * as displayList from './displaylist.js';
+import * as displayList from './list.js';
 
 const main = document.getElementById("main");
+const listOptionsContainer = document.getElementById("list-options"); 
+const projListContainer = document.getElementById("project-list");
+const taskListContainer = document.getElementById("task-list");
+let currentListOption;
 
 class task
 {
@@ -64,12 +68,12 @@ class project
 {
 	#title;
 	#taskList;
-	#taskID;
+	#taskIDIterator;
 
 	constructor(title) {
 		this.#title = title;
 		this.#taskList = [];
-		this.#taskID = 0;
+		this.#taskIDIterator = 0;
 	}
 
 	getTitle() {
@@ -95,8 +99,8 @@ class project
 		else
 			this.#taskList.splice(i, 0, taskObject);
 
-		this.#taskList[i].setID(`${this.#title}-${this.#taskID}`);
-		this.#taskID++;
+		this.#taskList[i].setID(`${this.#title}-${this.#taskIDIterator}`);
+		this.#taskIDIterator++;
 	}
 
 	moveTaskUp(taskID) {
@@ -136,6 +140,19 @@ class project
 			}
 		}
 	}
+
+	deleteTask(taskID) {
+		for (let i = 0; i < this.#taskList.length; i++)
+		{
+			if (this.#taskList.getID() == taskID)
+			{
+				this.#taskList.splice(i, 1);
+				return;
+			}
+
+			console.log(`No task of ID "${taskID}" exists!`);
+		}
+	}
 }
 
 class projectList
@@ -164,7 +181,7 @@ class projectList
 			this.#currentProject = projectObject;
 	}
 
-	removeProject(projectName) {
+	deleteProject(projectName) {
 		for (let i = 0; i < this.#projectList.length; i++)
 		{
 			if (this.#projectList[i].getTitle() == projectName)
@@ -198,9 +215,11 @@ class projectList
 			if (this.#projectList[i].getTitle() == projectName)
 			{
 				this.#currentProject = this.#projectList[i];
-				break;
+				return;
 			}
 		}
+
+		console.log(`No project of title "${projectName}" exists!`);
 	}
 }
 
@@ -212,7 +231,6 @@ function calculatePriority(dueDate)
 {
 	let last = new Date(dueDate.substr(0,4), dueDate.substr(5,2) - 1, dueDate.substr(8,2));
 	let today = new Date();
-	alert(last);
 
 	return differenceInDays(today, last);
 }
@@ -220,7 +238,6 @@ function calculatePriority(dueDate)
 function addTaskObject(title, description, dueDate)
 {
 	let priority = calculatePriority(dueDate);
-	alert(priority);
 
 	const newTask = new task(title, description, dueDate, -1, priority);
 	let currentProjectName = projList.getCurrentProject().getTitle();
@@ -233,6 +250,8 @@ function addTaskObject(title, description, dueDate)
 		projList.setCurrentProject(currentProjectName);
 		projList.getCurrentProject().addTaskByPriority(newTask);
 	}
+
+	displayTaskList();
 }
 
 function addProjectObject(title)
@@ -240,6 +259,8 @@ function addProjectObject(title)
 	let newProject = new project(title);
 	projList.addProject(newProject);
 	projList.setCurrentProject(title);
+
+	displayProjectSideBar();
 }
 
 function displayTaskPrompt()
@@ -272,5 +293,74 @@ function extractFormData(event)
 		addTaskObject(formObj['task'], formObj['description'], formObj['date']);
 }
 
+function displayProjectSideBar()
+{
+	displayList.displayProjectList(projList, projListContainer);
+}
+
+function displayTaskList()
+{
+	if (currentListOption == "every")
+		displayList.displayTotalList(projList.getCurrentProject(), taskListContainer);
+
+	else if (currentListOption == "this-week")
+		displayList.displayThisWeekList(projList.getCurrentProject(), taskListContainer);
+	
+	else if (currentListOption == "today")
+		displayList.displayTodayList(projList.getCurrentProject(), taskListContainer);
+}
+
+(function() {
+
+	let idString, classString = 'display-option', textString;
+	for (let i = 0; i < 3; i++)
+	{
+		if (i == 0)
+		{
+			idString = 'today';
+			textString = 'Today';
+		}
+
+		else if (i == 1)
+		{
+			idString = 'this-week';
+			textString = 'This Week';
+		}
+
+		else
+		{
+			idString = 'every';
+			textString = 'Every Task';
+			classString += ' selected';
+		}
+
+		let div = prompt.basicElementFactory('button', idString, classString);
+		div.innerText = textString;
+		listOptionsContainer.append(div);
+
+		div.addEventListener('click', selectListOption);
+	}
+
+	currentListOption = 'every';
+})();
+
+function selectListOption(event)
+{
+	let target = event.target;
+	let optionArray = [...listOptionsContainer.childNodes];
+
+	if (!target.classList.contains('selected'))
+			target.classList.add('selected');
+
+	optionArray.forEach(element => {
+		if (element.classList.contains('selected') && target.id != element.id)
+			element.classList.remove('selected');
+	});
+
+	currentListOption = target.id;
+	displayTaskList();
+}
+
 document.getElementById('add-task-button').addEventListener('click', displayTaskPrompt);
 document.getElementById('add-project-button').addEventListener('click', displayProjectPrompt);
+displayProjectSideBar();
