@@ -84,23 +84,49 @@ class project
 		return this.#taskList;
 	}
 
-	addTaskByPriority(taskObject) {
+	addTaskByPriority(title, description, dueDate, priority) {
+		const newTask = new task(title, description, dueDate, `${this.#title}-${this.#taskIDIterator}`, priority);
 		let i = 0;
 	
-		for (i = 0; i < this.#taskList.length; i++)
+		for (; i < this.#taskList.length; i++)
 		{
-			if (this.#taskList[i].getPriority() > taskObject.getPriority())
+			if (this.#taskList[i].getPriority() > newTask.getPriority())
 				break;
 		}
 
 		if (i == this.#taskList.length)
-			this.#taskList.push(taskObject);
+			this.#taskList.push(newTask);
 
 		else
-			this.#taskList.splice(i, 0, taskObject);
+			this.#taskList.splice(i, 0, newTask);
 
-		this.#taskList[i].setID(`${this.#title}-${this.#taskIDIterator}`);
 		this.#taskIDIterator++;
+		return newTask;
+	}
+
+	getTask(taskID)
+	{
+		for (let i = 0; i < this.#taskList.length; i++)
+		{
+			if (this.#taskList[i].getID() == taskID)
+				return this.#taskList[i];
+		}
+
+		console.log(`No task of ID "${taskID}" exists!`);
+		return null;
+	}
+
+	deleteTask(taskID) {
+		for (let i = 0; i < this.#taskList.length; i++)
+		{
+			if (this.#taskList[i].getID() == taskID)
+			{
+				this.#taskList.splice(i, 1);
+				return;
+			}
+		}
+
+		console.log(`No task of ID "${taskID}" exists!`);
 	}
 
 	moveTaskUp(taskID) {
@@ -140,19 +166,6 @@ class project
 			}
 		}
 	}
-
-	deleteTask(taskID) {
-		for (let i = 0; i < this.#taskList.length; i++)
-		{
-			if (this.#taskList.getID() == taskID)
-			{
-				this.#taskList.splice(i, 1);
-				return;
-			}
-
-			console.log(`No task of ID "${taskID}" exists!`);
-		}
-	}
 }
 
 class projectList
@@ -162,23 +175,39 @@ class projectList
 
 	constructor() {
 		this.#projectList = [];
+		this.#currentProject = null;
 	}
 
-	addProject(projectObject) {
-
+	addProject(projectName) {
+		const newProject = new project(projectName);
+	
 		for (let i = 0; i < this.#projectList.length; i++)
 		{
-			if (this.#projectList[i].getTitle() == projectObject.getTitle())
+			if (this.#projectList[i].getTitle() == projectName)
 			{
-				alert(`Project of title "${projectObject.getTitle()}" already exists!`);
+				alert(`Project of title "${projectName}" already exists!`);
 				return;
 			}
 		}
 
-		this.#projectList.push(projectObject);
+		this.#projectList.push(newProject);
 
 		if (this.#projectList.length == 1)
-			this.#currentProject = projectObject;
+			this.#currentProject = newProject;
+
+		return newProject;
+	}
+
+	getProject(projectName)
+	{
+		for (let i = 0; i < this.#projectList.length; i++)
+		{
+			if (this.#projectList[i].getTitle() == projectName)
+				return this.#projectList[i];
+		}
+
+		console.log(`No project of title "${projectName}" exists!`);
+		return null;
 	}
 
 	deleteProject(projectName) {
@@ -186,6 +215,9 @@ class projectList
 		{
 			if (this.#projectList[i].getTitle() == projectName)
 			{
+				if (this.getCurrentProject().getTitle() == projectName)
+					this.#currentProject = null;
+
 				this.#projectList.splice(i, 1);
 				return;
 			}
@@ -224,43 +256,48 @@ class projectList
 }
 
 let projList = new projectList();
-let univProject = new project("Universal");
-projList.addProject(univProject);
+projList.addProject("Universal");
 
 function calculatePriority(dueDate)
 {
-	let last = new Date(dueDate.substr(0,4), dueDate.substr(5,2) - 1, dueDate.substr(8,2));
+	let dueDateObj = new Date(dueDate.substr(0,4), dueDate.substr(5,2) - 1, dueDate.substr(8,2));
 	let today = new Date();
 
-	return differenceInDays(today, last);
+	return differenceInDays(dueDateObj, today);
 }
 
-function addTaskObject(title, description, dueDate)
+function addProjectToList(title)
+{
+	projList.addProject(title);
+	projList.setCurrentProject(title);
+
+	displayProjectSideBar();
+	displayTaskList();
+}
+
+function addTaskToCurrentProject(title, description, dueDate)
 {
 	let priority = calculatePriority(dueDate);
+	
+	if (priority < 0)
+	{
+		alert("Cannot add task with due date before today!");
+		return;
+	}
 
-	const newTask = new task(title, description, dueDate, -1, priority);
 	let currentProjectName = projList.getCurrentProject().getTitle();
 
 	projList.setCurrentProject("Universal");
-	projList.getCurrentProject().addTaskByPriority(newTask);
+	let univTask = projList.getCurrentProject().addTaskByPriority(title, description, dueDate, priority);
 
 	if (currentProjectName != "Universal")
 	{
 		projList.setCurrentProject(currentProjectName);
-		projList.getCurrentProject().addTaskByPriority(newTask);
+		let specificProjectTask = projList.getCurrentProject().addTaskByPriority(title, description, dueDate, priority);
+		univTask.setID(specificProjectTask.getID());
 	}
 
 	displayTaskList();
-}
-
-function addProjectObject(title)
-{
-	let newProject = new project(title);
-	projList.addProject(newProject);
-	projList.setCurrentProject(title);
-
-	displayProjectSideBar();
 }
 
 function displayTaskPrompt()
@@ -287,19 +324,30 @@ function extractFormData(event)
 	}
 
 	if (Object.keys(formObj).length == 1)
-		addProjectObject(formObj['project']);
+		addProjectToList(formObj['project']);
 
 	else if (Object.keys(formObj).length == 3)
-		addTaskObject(formObj['task'], formObj['description'], formObj['date']);
+		addTaskToCurrentProject(formObj['task'], formObj['description'], formObj['date']);
 }
 
 function displayProjectSideBar()
 {
-	displayList.displayProjectList(projList, projListContainer);
+	displayList.displayProjectList(projList, projListContainer, taskListContainer);
+
+	let projNodeArray = [...projListContainer.childNodes];
+	projNodeArray.forEach(element => {
+		element.addEventListener('click', displayTaskList);
+		element.firstChild.addEventListener('click', deleteProjectTasksFromUniv);
+	});
+
+	projNodeArray[0].firstChild.remove();
 }
 
 function displayTaskList()
 {
+	if (!projList.getCurrentProject())
+		return;
+
 	if (currentListOption == "every")
 		displayList.displayTotalList(projList.getCurrentProject(), taskListContainer);
 
@@ -308,6 +356,14 @@ function displayTaskList()
 	
 	else if (currentListOption == "today")
 		displayList.displayTodayList(projList.getCurrentProject(), taskListContainer);
+
+	let taskNodeArray = [...taskListContainer.childNodes];
+	let taskDetailsArray;
+
+	taskNodeArray.forEach(element => {
+		taskDetailsArray = [...element.childNodes];
+		taskDetailsArray[1].addEventListener('click', deleteTasksFromAllProjects);
+	});
 }
 
 (function() {
@@ -344,6 +400,66 @@ function displayTaskList()
 	currentListOption = 'every';
 })();
 
+function deleteTasksFromAllProjects(event)
+{
+	let parent = event.target.parentNode;
+	let id = parent.firstChild.innerText;
+	let targetProjectTitle = id.split('-')[0];
+
+	if (targetProjectTitle != "Universal")
+	{
+		let targetProject;
+	
+		if (projList.getCurrentProject().getTitle() == "Universal")
+			targetProject = projList.getProject(targetProjectTitle);
+
+		else
+			targetProject = projList.getProject("Universal");
+
+		targetProject.deleteTask(id);
+	}
+}
+
+function checkTaskInOtherProjects(taskID)
+{
+	let projListArray = projList.getProjectList();
+
+	for (let i = 1; i < projListArray.length; i++)
+	{
+		if (projListArray[i].getTask(taskID))
+			return true;
+	}
+
+	return false;
+}
+
+function deleteProjectTasksFromUniv()
+{
+	let univProject = projList.getProject("Universal");
+	let univProjectListLength = projList.getProjectList().length;
+	let toBeDeleted = [];
+
+	univProject.getTaskList().forEach(element => {
+		let taskID = element.getID();
+		let taskProjectTitle = taskID.split('-')[0];
+
+		if (univProjectListLength == 1)
+		{
+			if (taskProjectTitle != "Universal")
+				toBeDeleted.push(taskID);
+		}
+
+		else if (!checkTaskInOtherProjects(taskID))
+			toBeDeleted.push(taskID);
+	});
+
+	toBeDeleted.forEach(element => {
+		univProject.deleteTask(element);
+	});
+
+	displayTaskList();
+}
+
 function selectListOption(event)
 {
 	let target = event.target;
@@ -351,6 +467,9 @@ function selectListOption(event)
 
 	if (!target.classList.contains('selected'))
 			target.classList.add('selected');
+
+	else
+		return;
 
 	optionArray.forEach(element => {
 		if (element.classList.contains('selected') && target.id != element.id)
