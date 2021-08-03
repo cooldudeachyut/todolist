@@ -24,7 +24,7 @@ class task
 		this.#dueDate = dueDate;
 		this.#priority = priority;
 		this.#id = id;
-		this.#status = false;
+		this.#status = status;
 	}
 
 	getTitle() {
@@ -76,6 +76,11 @@ class project
 		this.#taskIDIterator = 0;
 	}
 
+	#generateUniqueID(keyword)
+	{
+		return `${keyword}-${this.#taskIDIterator}`;
+	}
+
 	getTitle() {
 		return this.#title;
 	}
@@ -84,13 +89,13 @@ class project
 		return this.#taskList;
 	}
 
-	addTaskByPriority(title, description, dueDate, priority) {
-		const newTask = new task(title, description, dueDate, `${this.#title}-${this.#taskIDIterator}`, priority);
+	addTaskByPriority(title, description, dueDate, priority, status) {
+		const newTask = new task(title, description, dueDate, this.#generateUniqueID(this.#title), priority, status);
 		let i = 0;
 	
 		for (; i < this.#taskList.length; i++)
 		{
-			if (this.#taskList[i].getPriority() > newTask.getPriority())
+			if (this.#taskList[i].getPriority() > priority)
 				break;
 		}
 
@@ -104,8 +109,7 @@ class project
 		return newTask;
 	}
 
-	getTask(taskID)
-	{
+	getTask(taskID) {
 		for (let i = 0; i < this.#taskList.length; i++)
 		{
 			if (this.#taskList[i].getID() == taskID)
@@ -198,8 +202,7 @@ class projectList
 		return newProject;
 	}
 
-	getProject(projectName)
-	{
+	getProject(projectName) {
 		for (let i = 0; i < this.#projectList.length; i++)
 		{
 			if (this.#projectList[i].getTitle() == projectName)
@@ -270,12 +273,9 @@ function addProjectToList(title)
 {
 	projList.addProject(title);
 	projList.setCurrentProject(title);
-
-	displayProjectSideBar();
-	displayTaskList();
 }
 
-function addTaskToCurrentProject(title, description, dueDate)
+function addTaskToCurrentProject(title, description, dueDate, status)
 {
 	let priority = calculatePriority(dueDate);
 	
@@ -288,7 +288,7 @@ function addTaskToCurrentProject(title, description, dueDate)
 	let currentProjectName = projList.getCurrentProject().getTitle();
 
 	projList.setCurrentProject("Universal");
-	let univTask = projList.getCurrentProject().addTaskByPriority(title, description, dueDate, priority);
+	let univTask = projList.getCurrentProject().addTaskByPriority(title, description, dueDate, priority, status);
 
 	if (currentProjectName != "Universal")
 	{
@@ -296,25 +296,23 @@ function addTaskToCurrentProject(title, description, dueDate)
 		let specificProjectTask = projList.getCurrentProject().addTaskByPriority(title, description, dueDate, priority);
 		univTask.setID(specificProjectTask.getID());
 	}
-
-	displayTaskList();
 }
 
 function displayTaskPrompt()
 {
 	let promptWindow = prompt.createTaskPrompt();
 	main.append(promptWindow[0]);
-	promptWindow[1].addEventListener('submit', extractFormData);
+	promptWindow[1].addEventListener('submit', extractAndDisplayFormData);
 }
 
 function displayProjectPrompt()
 {
 	let promptWindow = prompt.createProjectPrompt();
 	main.append(promptWindow[0]);
-	promptWindow[1].addEventListener('submit', extractFormData);
+	promptWindow[1].addEventListener('submit', extractAndDisplayFormData);
 }
 
-function extractFormData(event)
+function extractAndDisplayFormData(event)
 {
 	let formObj = {};
 	let formDetails = new FormData(event.target);
@@ -327,7 +325,10 @@ function extractFormData(event)
 		addProjectToList(formObj['project']);
 
 	else if (Object.keys(formObj).length == 3)
-		addTaskToCurrentProject(formObj['task'], formObj['description'], formObj['date']);
+		addTaskToCurrentProject(formObj['task'], formObj['description'], formObj['date'], false);
+
+	displayProjectSideBar();
+	displayTaskList();
 }
 
 function displayProjectSideBar()
@@ -362,45 +363,11 @@ function displayTaskList()
 
 	taskNodeArray.forEach(element => {
 		taskDetailsArray = [...element.childNodes];
-		taskDetailsArray[1].addEventListener('click', deleteTasksFromAllProjects);
+		taskDetailsArray[1].addEventListener('click', deleteTaskFromAllProjects);
 	});
 }
 
-(function() {
-
-	let idString, classString = 'display-option', textString;
-	for (let i = 0; i < 3; i++)
-	{
-		if (i == 0)
-		{
-			idString = 'today';
-			textString = 'Today';
-		}
-
-		else if (i == 1)
-		{
-			idString = 'this-week';
-			textString = 'This Week';
-		}
-
-		else
-		{
-			idString = 'every';
-			textString = 'Every Task';
-			classString += ' selected';
-		}
-
-		let div = prompt.basicElementFactory('button', idString, classString);
-		div.innerText = textString;
-		listOptionsContainer.append(div);
-
-		div.addEventListener('click', selectListOption);
-	}
-
-	currentListOption = 'every';
-})();
-
-function deleteTasksFromAllProjects(event)
+function deleteTaskFromAllProjects(event)
 {
 	let parent = event.target.parentNode;
 	let id = parent.firstChild.innerText;
@@ -460,6 +427,40 @@ function deleteProjectTasksFromUniv()
 	displayTaskList();
 }
 
+(function() { //To display the list options with 'Today', 'This Week', and 'Every Task' options
+
+	let idString, classString = 'display-option', textString;
+	for (let i = 0; i < 3; i++)
+	{
+		if (i == 0)
+		{
+			idString = 'today';
+			textString = 'Today';
+		}
+
+		else if (i == 1)
+		{
+			idString = 'this-week';
+			textString = 'This Week';
+		}
+
+		else
+		{
+			idString = 'every';
+			textString = 'Every Task';
+			classString += ' selected';
+		}
+
+		let div = prompt.basicElementFactory('button', idString, classString);
+		div.innerText = textString;
+		listOptionsContainer.append(div);
+
+		div.addEventListener('click', selectListOption);
+	}
+
+	currentListOption = 'every';
+})();
+
 function selectListOption(event)
 {
 	let target = event.target;
@@ -480,6 +481,67 @@ function selectListOption(event)
 	displayTaskList();
 }
 
+let myProjectLocalStorage = window.localStorage;
+
+function updateProjectLocalStorage()
+{
+	let projListTitleArray = [];
+	projList.getProjectList().forEach(projItr => {
+		projListTitleArray.push(projItr .getTitle());
+	});
+
+	myProjectLocalStorage.setItem('projListTitleArray', JSON.stringify(projListTitleArray));
+
+	projList.getProjectList().forEach(projItr  => {
+		let taskListTitleArray = [], taskListDescriptionArray = [], taskListDueDateArray = [], taskListStatusArray = [];
+
+		projItr.getTaskList().forEach(taskItr => {
+			let actualTaskProjectTitle = taskItr.getID().split('-')[0];
+
+			if (projItr.getTitle() != "Universal" || actualTaskProjectTitle == "Universal")
+			{
+				taskListTitleArray.push(taskItr.getTitle());
+				taskListDescriptionArray.push(taskItr.getDescription());
+				taskListDueDateArray.push(taskItr.getDueDate());
+				taskListStatusArray.push(taskItr.getStatus());
+			}
+		});
+
+		myProjectLocalStorage.setItem(`${projItr.getTitle()}-title`, JSON.stringify(taskListTitleArray));
+		myProjectLocalStorage.setItem(`${projItr.getTitle()}-description`, JSON.stringify(taskListDescriptionArray));
+		myProjectLocalStorage.setItem(`${projItr.getTitle()}-duedate`, JSON.stringify(taskListDueDateArray));
+		myProjectLocalStorage.setItem(`${projItr.getTitle()}-status`, JSON.stringify(taskListStatusArray));
+	});
+}
+
+(function() { //To retrieve data from local storage
+	if (myProjectLocalStorage.getItem('projListTitleArray') === null)
+		return;
+
+	let projListTitleArray = JSON.parse(myProjectLocalStorage.getItem('projListTitleArray') );
+
+	projListTitleArray.forEach(projItr => {
+		if (projItr != "Universal")
+			addProjectToList(projItr);
+
+		let taskListTitleArray = JSON.parse(myProjectLocalStorage.getItem(`${projItr}-title`));
+		let taskListDescriptionArray = JSON.parse(myProjectLocalStorage.getItem(`${projItr}-description`));
+		let taskListDueDateArray = JSON.parse(myProjectLocalStorage.getItem(`${projItr}-duedate`));
+		let taskListStatusArray = JSON.parse(myProjectLocalStorage.getItem(`${projItr}-status`));
+
+		for (let i = 0; i < taskListTitleArray.length; i++)
+			addTaskToCurrentProject(taskListTitleArray[i], taskListDescriptionArray[i], taskListDueDateArray[i], taskListStatusArray[i]);
+	});
+
+	projList.setCurrentProject("Universal");
+})();
+
+window.addEventListener('beforeunload', (event) => {
+	event.preventDefault();
+	updateProjectLocalStorage();
+});
+
 document.getElementById('add-task-button').addEventListener('click', displayTaskPrompt);
 document.getElementById('add-project-button').addEventListener('click', displayProjectPrompt);
 displayProjectSideBar();
+displayTaskList();
