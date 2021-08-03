@@ -23,7 +23,7 @@ function createRemoveButton()
 function formatDate(dateString)
 {
 	let dateObj = new Date(dateString.substr(0,4), dateString.substr(5,2) - 1, dateString.substr(8,2));
-	return format(dateObj, 'EEE dd MMM yyyy');
+	return format(dateObj, 'EEE, dd MMM yyyy');
 }
 
 export function displayProjectList(projListObject, projListContainer, taskListContainer)
